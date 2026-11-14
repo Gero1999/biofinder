@@ -10,6 +10,7 @@ This repository currently contains design documents; the agent is not implemente
 - [Six technical-support scenarios](TECHNICAL_SUPPORT_SCENARIOS.md)
 - [Text-based agent decision tree](AGENT_DECISION_TREE.md)
 - [Temporary context and safe tool handoffs](CONTEXT_MANAGEMENT_PLAN.md)
+- [Cache strategies and invalidation](CACHE_STRATEGIES.md)
 
 ## Agent decision flow
 
