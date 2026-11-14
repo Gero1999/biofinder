@@ -1,0 +1,75 @@
+{
+  "id": 3,
+  "name": "longitudinal_endpoint",
+  "query": "Investigate longitudinal_endpoint using the supplied synthetic case.",
+  "public_terms": [
+    "longitudinal_endpoint",
+    "biological dataset"
+  ],
+  "documents": {
+    "requirements": "Definitions: day is numeric relative to first treatment; baseline is the interval from -7 through 0 inclusive."
+  },
+  "tables": {
+    "visits": "subject,day\nA,-2\nB,0\nC,1\nD,4\nE,\nF,-10\n"
+  },
+  "requirements": {},
+  "sources": [
+    "https://data.example.org/longitudinal_endpoint/study"
+  ],
+  "public_text": "The synthetic visit label baseline includes post-treatment collections; missing outcomes remain unknown.",
+  "model": {
+    "plan": {
+      "steps": [
+        {
+          "id": "case_definitions",
+          "intent": "documents",
+          "query": "Definitions",
+          "documents": [
+            "requirements"
+          ]
+        },
+        {
+          "id": "public_evidence",
+          "intent": "discovery",
+          "query": "baseline post-treatment outcomes",
+          "documents": "case"
+        },
+        {
+          "id": "calculation",
+          "intent": "calculation",
+          "query": "Calculate longitudinal_endpoint",
+          "tables": [
+            "visits"
+          ],
+          "calculation": {
+            "operation": "baseline",
+            "column": "day",
+            "lower": -7,
+            "upper": 0
+          },
+          "definition_quote": "Definitions: day is numeric relative to first treatment; baseline is the interval from -7 through 0 inclusive."
+        }
+      ]
+    },
+    "synthesis": {
+      "claims": [
+        {
+          "statement": "The synthetic visit label baseline includes post-treatment collections; missing outcomes remain unknown.",
+          "citations": [
+            {
+              "id": "E2",
+              "quote": "The synthetic visit label baseline includes post-treatment collections; missing outcomes remain unknown."
+            }
+          ]
+        }
+      ],
+      "unresolved": []
+    }
+  },
+  "expected": {
+    "eligible": 2,
+    "post_treatment": 2,
+    "unknown": 1,
+    "outside_window": 1
+  }
+}

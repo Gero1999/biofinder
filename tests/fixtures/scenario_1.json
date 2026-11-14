@@ -1,0 +1,81 @@
+{
+  "id": 1,
+  "name": "donor_overlap",
+  "query": "Investigate donor_overlap using the supplied synthetic case.",
+  "public_terms": [
+    "donor_overlap",
+    "biological dataset"
+  ],
+  "documents": {
+    "requirements": "Definitions: donor_id identifies an independent donor; library_id is a technical library."
+  },
+  "tables": {
+    "cohort": "donor_id,library_id\nD00,L000\nD01,L001\nD02,L002\nD03,L003\nD04,L004\nD05,L005\nD06,L006\nD07,L007\nD08,L008\nD09,L009\nD10,L010\nD11,L011\nD12,L012\nD13,L013\nD14,L014\nD15,L015\nD16,L016\nD17,L017\nD00,L018\nD01,L019\nD02,L020\nD03,L021\nD04,L022\nD05,L023\nD06,L024\nD07,L025\nD08,L026\nD09,L027\nD10,L028\nD11,L029\nD12,L030\nD13,L031\nD14,L032\nD15,L033\nD16,L034\nD17,L035\nD00,L036\nD01,L037\nD02,L038\nD03,L039\nD04,L040\nD05,L041\nD06,L042\nD07,L043\nD08,L044\nD09,L045\nD10,L046\nD11,L047\nD12,L048\nD13,L049\nD14,L050\nD15,L051\nD16,L052\nD17,L053\nD00,L054\nD01,L055\nD02,L056\nD03,L057\nD04,L058\nD05,L059\nD06,L060\nD07,L061\nD08,L062\nD09,L063\nD10,L064\nD11,L065\nD12,L066\nD13,L067\nD14,L068\nD15,L069\nD16,L070\nD17,L071\nD00,L072\nD01,L073\nD02,L074\nD03,L075\nD04,L076\nD05,L077\nD06,L078\nD07,L079\nD08,L080\nD09,L081\nD10,L082\nD11,L083\nD12,L084\nD13,L085\nD14,L086\nD15,L087\nD16,L088\nD17,L089\nD00,L090\nD01,L091\nD02,L092\nD03,L093\nD04,L094\nD05,L095\nD06,L096\nD07,L097\nD08,L098\nD09,L099\nD10,L100\nD11,L101\nD12,L102\nD13,L103\nD14,L104\nD15,L105\nD16,L106\nD17,L107\nD00,L108\nD01,L109\nD02,L110\nD03,L111\nD04,L112\nD05,L113\nD06,L114\nD07,L115\nD08,L116\nD09,L117\nD10,L118\nD11,L119\n"
+  },
+  "requirements": {
+    "criteria": [
+      {
+        "id": "minimum_donors",
+        "operation": "count_distinct",
+        "column": "donor_id",
+        "field": "distinct",
+        "minimum": 30
+      }
+    ]
+  },
+  "sources": [
+    "https://data.example.org/donor_overlap/study"
+  ],
+  "public_text": "This synthetic study contains 120 libraries from 18 independent donors.",
+  "model": {
+    "plan": {
+      "steps": [
+        {
+          "id": "case_definitions",
+          "intent": "documents",
+          "query": "Definitions",
+          "documents": [
+            "requirements"
+          ]
+        },
+        {
+          "id": "public_evidence",
+          "intent": "discovery",
+          "query": "independent donors libraries",
+          "documents": "case"
+        },
+        {
+          "id": "calculation",
+          "intent": "calculation",
+          "query": "Calculate donor_overlap",
+          "tables": [
+            "cohort"
+          ],
+          "calculation": {
+            "operation": "count_distinct",
+            "column": "donor_id"
+          },
+          "definition_quote": "Definitions: donor_id identifies an independent donor; library_id is a technical library."
+        }
+      ]
+    },
+    "synthesis": {
+      "claims": [
+        {
+          "statement": "This synthetic study contains 120 libraries from 18 independent donors.",
+          "citations": [
+            {
+              "id": "E2",
+              "quote": "This synthetic study contains 120 libraries from 18 independent donors."
+            }
+          ]
+        }
+      ],
+      "unresolved": []
+    }
+  },
+  "expected": {
+    "distinct": 18,
+    "rows": 120
+  }
+}

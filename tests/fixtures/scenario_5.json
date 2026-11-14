@@ -1,0 +1,87 @@
+{
+  "id": 5,
+  "name": "multiomics_join",
+  "query": "Investigate multiomics_join using the supplied synthetic case.",
+  "public_terms": [
+    "multiomics_join",
+    "biological dataset"
+  ],
+  "documents": {
+    "requirements": "Definitions: specimen_id is the exact biological specimen key; tissue must equal tumor in both manifests."
+  },
+  "tables": {
+    "rna": "specimen_id,tissue\nT1,tumor\nT2,tumor\nT3,tumor\nN1,normal\nT4,tumor\nT4,tumor\n",
+    "protein": "specimen_id,tissue\nT1,tumor\nT2,tumor\nT3,tumor\nN1,normal\nT4,tumor\n"
+  },
+  "requirements": {
+    "criteria": [
+      {
+        "id": "minimum_pairs",
+        "operation": "join",
+        "field": "verified_one_to_one",
+        "minimum": 40
+      }
+    ]
+  },
+  "sources": [
+    "https://data.example.org/multiomics_join/study"
+  ],
+  "public_text": "The synthetic consortium distinguishes tumor specimens from adjacent normal specimens and technical aliquots.",
+  "model": {
+    "plan": {
+      "steps": [
+        {
+          "id": "case_definitions",
+          "intent": "documents",
+          "query": "Definitions",
+          "documents": [
+            "requirements"
+          ]
+        },
+        {
+          "id": "public_evidence",
+          "intent": "discovery",
+          "query": "tumor specimens aliquots",
+          "documents": "case"
+        },
+        {
+          "id": "calculation",
+          "intent": "calculation",
+          "query": "Calculate multiomics_join",
+          "tables": [
+            "rna",
+            "protein"
+          ],
+          "calculation": {
+            "operation": "join",
+            "key": "specimen_id",
+            "filters": {
+              "tissue": "tumor"
+            }
+          },
+          "definition_quote": "Definitions: specimen_id is the exact biological specimen key; tissue must equal tumor in both manifests."
+        }
+      ]
+    },
+    "synthesis": {
+      "claims": [
+        {
+          "statement": "The synthetic consortium distinguishes tumor specimens from adjacent normal specimens and technical aliquots.",
+          "citations": [
+            {
+              "id": "E2",
+              "quote": "The synthetic consortium distinguishes tumor specimens from adjacent normal specimens and technical aliquots."
+            }
+          ]
+        }
+      ],
+      "unresolved": []
+    }
+  },
+  "expected": {
+    "verified_one_to_one": 3,
+    "ambiguous_keys": [
+      "T4"
+    ]
+  }
+}

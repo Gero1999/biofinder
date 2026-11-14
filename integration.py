@@ -31,7 +31,7 @@ class LocalFileSearch:
 
     def register(self, artifact: Artifact, *, case_id: str) -> str:
         self._scope(case_id)
-        if artifact.media_type not in {"text/plain", "text/markdown", "text/html"}:
+        if artifact.media_type not in {"text/plain", "text/markdown", "text/html", "text/csv", "text/tab-separated-values", "application/json", "application/pdf"}:
             raise ToolError()
         if len(artifact.text.encode("utf-8")) > 25 * 1024 * 1024:
             raise ToolError()
