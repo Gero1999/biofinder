@@ -11,6 +11,7 @@ This repository currently contains design documents; the agent is not implemente
 - [Text-based agent decision tree](AGENT_DECISION_TREE.md)
 - [Temporary context and safe tool handoffs](CONTEXT_MANAGEMENT_PLAN.md)
 - [Cache strategies and invalidation](CACHE_STRATEGIES.md)
+- [Tool-cost and support-workflow optimization](OPTIMIZATION_PLAN.md)
 
 ## Agent decision flow
 
