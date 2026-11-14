@@ -1,0 +1,2 @@
+# PDF extraction; runtime and tests otherwise use Python's standard library.
+pypdf>=6,<7

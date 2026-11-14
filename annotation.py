@@ -30,6 +30,7 @@ class Request:
     private_source_missing: bool = False
     table_ids: tuple[str, ...] = ()
     definitions_verified: bool = False
+    calculation: dict | None = None
 
 
 def classify_query(request: Request) -> Intent | None:
@@ -101,6 +102,7 @@ class CaseContext:
     external_requests: int = 0
     deadline: float = field(default_factory=lambda: time.monotonic() + 480)
     trace: list[str] = field(default_factory=list)
+    force_refresh: bool = False
 
 
 @dataclass(frozen=True)
@@ -111,6 +113,7 @@ class Outcome:
     evidence: tuple[Evidence, ...] = ()
     leads: tuple[Source, ...] = ()
     trace: tuple[str, ...] = ()
+    unresolved: tuple[str, ...] = ()
 
 
 class ToolError(Exception):
@@ -166,18 +169,19 @@ class BiofinderAgent:
     def __init__(self, context: CaseContext, *, file_search: FileSearch | None = None,
                  browser: Browser | None = None, ingestor: Ingestor | None = None,
                  tables: TableProcessor | None = None,
-                 wait: Callable[[float], None] = time.sleep):
+                 wait: Callable[[float], None] = time.sleep, progress: Callable | None = None):
         self.context = context
         self.file_search = file_search
         self.browser = browser
         self.ingestor = ingestor
         self.tables = tables
         self.wait = wait
+        self.progress = progress
 
     def _outcome(self, status: str, route: str, message: str, *,
-                 evidence: tuple[Evidence, ...] = (), leads: tuple[Source, ...] = ()) -> Outcome:
+                 evidence: tuple[Evidence, ...] = (), leads: tuple[Source, ...] = (), unresolved: tuple[str, ...] = ()) -> Outcome:
         # Retrieval is not final claim validation (V0/D8); evidence stays partial.
-        return Outcome(status, route, message, evidence, leads, tuple(self.context.trace))
+        return Outcome(status, route, message, evidence, leads, tuple(self.context.trace), unresolved)
 
     def _guard(self) -> None:
         if self.context.cancelled:
@@ -188,11 +192,16 @@ class BiofinderAgent:
     def _call(self, label: str, operation: Callable, *, remote: bool, **kwargs):
         for attempt in range(3):
             self._guard()  # D3: before every underlying operation and retry.
-            if remote:
+            owner = getattr(operation, "__self__", None)
+            accounted = getattr(owner, "accounts_requests", False) is True
+            if remote and not accounted:
                 if self.context.external_requests >= self.context.request_limit:
                     raise BudgetExceeded()
                 self.context.external_requests += 1
             self.context.trace.append(label)  # No private query text or tool error body.
+            if self.progress:
+                self.progress({"stage": label, "external_requests": self.context.external_requests})
+            self._guard()
             try:
                 result = operation(timeout=min(30.0, self.context.deadline - time.monotonic()), **kwargs)
                 self._guard()  # Do not accept late results from a cancelled/expired run.
@@ -235,6 +244,8 @@ class BiofinderAgent:
     def route_request(self, request: Request) -> Outcome:
         """P0/D0/D1/D3/D4: choose a route with explicit if/elif/else logic."""
         self.context.trace.clear()
+        self.context.force_refresh = request.current or bool(
+            request.intent == "auto" and re.search(r"\b(latest|current)\b", request.query.lower()))
         try:
             self._guard()
             if not request.permitted:
@@ -316,6 +327,7 @@ class BiofinderAgent:
             hits = self._call("A3:file_search", self.file_search.search,
                               remote=self.file_search.remote, query=request.query, ids=ids,
                               case_id=self.context.case_id, version=request.version, contextual=False)
+            self._validate_hits(hits, ids, request.version)
             if hits:
                 return self._outcome("partial", "documents", "Evidence retrieved; final claim validation is still required.", evidence=hits)
             else:
@@ -323,6 +335,7 @@ class BiofinderAgent:
                 hits = self._call("R1:contextual_file_search", self.file_search.search,
                                   remote=self.file_search.remote, query=request.query, ids=ids,
                                   case_id=self.context.case_id, version=request.version, contextual=True)
+                self._validate_hits(hits, ids, request.version)
                 if hits:
                     return self._outcome("partial", "documents", "Contextual evidence retrieved; validate its qualifiers.", evidence=hits)
                 elif request.document_only or request.private_source_missing or not allow_web_fallback:
@@ -330,6 +343,13 @@ class BiofinderAgent:
                 else:
                     # Only preapproved public terms cross this boundary, never hit text.
                     return self._web_handle(request)
+
+    def _validate_hits(self, hits, ids, version):
+        for hit in hits:
+            if not isinstance(hit, Evidence) or hit.source_id not in ids:
+                raise AccessDenied()
+            if not hit.text or not hit.location or (version is not None and hit.version != version):
+                raise ToolError()
 
     def _web_handle(self, request: Request) -> Outcome:
         query = self._public_query(request)
@@ -345,7 +365,31 @@ class BiofinderAgent:
             elif self.ingestor is None or self.file_search is None:
                 return self._outcome("partial", "browser", "Sources discovered; configure ingestion and file_search to inspect them.", leads=safe)
             else:
-                return self._open_and_lookup(request, safe[0], safe)
+                collected = []
+                last_outcome = None
+                errors = []
+                unavailable = []
+                for source in safe[:3]:
+                    try:
+                        outcome = self._open_and_lookup(request, source, safe)
+                        last_outcome = outcome
+                        collected.extend(outcome.evidence)
+                    except (AccessDenied, ToolError) as error:
+                        if isinstance(error, (Cancelled, BudgetExceeded)):
+                            raise
+                        errors.append(error)
+                        unavailable.append("Source unavailable: " + source.url)
+                        self.context.trace.append("A8:source_unavailable")
+                unique = tuple(dict.fromkeys(collected))
+                if unique:
+                    return self._outcome("partial", "browser", "Sources inspected; validate evidence and unresolved sources.",
+                                         evidence=unique, leads=safe, unresolved=tuple(unavailable))
+                elif last_outcome is not None:
+                    return last_outcome
+                elif any(isinstance(error, AccessDenied) for error in errors):
+                    raise AccessDenied()
+                else:
+                    raise ToolError()
 
     def _source_handle(self, request: Request) -> Outcome:
         if request.document_only:
@@ -389,6 +433,8 @@ class BiofinderAgent:
         elif self.tables is None:
             return self._outcome("blocked", "calculation", "Configure a deterministic table processor.")
         else:
-            evidence = self._call("A7:table_processing", self.tables.calculate, remote=False,
-                                  query=request.query, ids=request.table_ids, case_id=self.context.case_id)
+            arguments = dict(query=request.query, ids=request.table_ids, case_id=self.context.case_id)
+            if request.calculation is not None:
+                arguments["specification"] = request.calculation
+            evidence = self._call("A7:table_processing", self.tables.calculate, remote=False, **arguments)
             return self._outcome("partial", "calculation", "Calculation returned; validate the operation and input provenance.", evidence=evidence)

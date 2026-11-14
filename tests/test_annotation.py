@@ -1,6 +1,7 @@
 import time
 import unittest
 from unittest.mock import Mock
+from helpers import OfflineTest
 
 from annotation import (AccessDenied, Artifact, BiofinderAgent, CaseContext,
                         Evidence, Ingestion, Request, Source, TransientError, classify_query)
@@ -11,8 +12,9 @@ PUBLIC = Source("https://example.org/study")
 HIT = Evidence("doc", "page 2", "Study includes paired baseline visits.", "v1")
 
 
-class RoutingTests(unittest.TestCase):
+class RoutingTests(OfflineTest):
     def setUp(self):
+        super().setUp()
         self.context = CaseContext("case", authorized_document_ids={"doc"},
             approved_public_terms=("human", "melanoma"),
             approved_references={PUBLIC.url}, allowed_hosts={"example.org"})

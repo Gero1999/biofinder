@@ -1,0 +1,73 @@
+{
+  "id": 2,
+  "name": "rnaseq_compatibility",
+  "query": "Investigate rnaseq_compatibility using the supplied synthetic case.",
+  "public_terms": [
+    "rnaseq_compatibility",
+    "biological dataset"
+  ],
+  "documents": {
+    "requirements": "Definitions: gene_id is the unchanged annotation identifier; reference contains supported gene IDs."
+  },
+  "tables": {
+    "matrix": "gene_id\nG0\nG1\nG2\nG3\nG4\nG5\n",
+    "reference": "gene_id\nG0\nG1\nG2\nG3\n"
+  },
+  "requirements": {},
+  "sources": [
+    "https://data.example.org/rnaseq_compatibility/study"
+  ],
+  "public_text": "The synthetic deposited matrix is TPM normalized; the requested count-based workflow needs raw counts.",
+  "model": {
+    "plan": {
+      "steps": [
+        {
+          "id": "case_definitions",
+          "intent": "documents",
+          "query": "Definitions",
+          "documents": [
+            "requirements"
+          ]
+        },
+        {
+          "id": "public_evidence",
+          "intent": "discovery",
+          "query": "TPM normalized counts",
+          "documents": "case"
+        },
+        {
+          "id": "calculation",
+          "intent": "calculation",
+          "query": "Calculate rnaseq_compatibility",
+          "tables": [
+            "matrix",
+            "reference"
+          ],
+          "calculation": {
+            "operation": "unmatched",
+            "column": "gene_id"
+          },
+          "definition_quote": "Definitions: gene_id is the unchanged annotation identifier; reference contains supported gene IDs."
+        }
+      ]
+    },
+    "synthesis": {
+      "claims": [
+        {
+          "statement": "The synthetic deposited matrix is TPM normalized; the requested count-based workflow needs raw counts.",
+          "citations": [
+            {
+              "id": "E2",
+              "quote": "The synthetic deposited matrix is TPM normalized; the requested count-based workflow needs raw counts."
+            }
+          ]
+        }
+      ],
+      "unresolved": []
+    }
+  },
+  "expected": {
+    "unmatched": 2,
+    "rows": 6
+  }
+}

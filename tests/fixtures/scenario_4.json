@@ -1,0 +1,56 @@
+{
+  "id": 4,
+  "name": "access_reuse",
+  "query": "Investigate access_reuse using the supplied synthetic case.",
+  "public_terms": [
+    "access_reuse",
+    "biological dataset"
+  ],
+  "documents": {
+    "requirements": "Definitions: publication licensing and dataset reuse permissions are separate; inspect current dataset terms."
+  },
+  "tables": {},
+  "requirements": {},
+  "sources": [
+    "https://data.example.org/access_reuse/restricted",
+    "https://data.example.org/access_reuse/study"
+  ],
+  "public_text": "The synthetic alternative is available for research use; commercial reuse requires agreement review.",
+  "model": {
+    "plan": {
+      "steps": [
+        {
+          "id": "case_definitions",
+          "intent": "documents",
+          "query": "Definitions",
+          "documents": [
+            "requirements"
+          ]
+        },
+        {
+          "id": "public_evidence",
+          "intent": "discovery",
+          "query": "research commercial reuse",
+          "documents": "case"
+        }
+      ]
+    },
+    "synthesis": {
+      "claims": [
+        {
+          "statement": "The synthetic alternative is available for research use; commercial reuse requires agreement review.",
+          "citations": [
+            {
+              "id": "E2",
+              "quote": "The synthetic alternative is available for research use; commercial reuse requires agreement review."
+            }
+          ]
+        }
+      ],
+      "unresolved": [
+        "Commercial reuse permission remains unresolved; human agreement review is required."
+      ]
+    }
+  },
+  "expected": {}
+}

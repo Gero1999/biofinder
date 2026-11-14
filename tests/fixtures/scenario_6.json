@@ -1,0 +1,74 @@
+{
+  "id": 6,
+  "name": "microbiome_confounding",
+  "query": "Investigate microbiome_confounding using the supplied synthetic case.",
+  "public_terms": [
+    "microbiome_confounding",
+    "biological dataset"
+  ],
+  "documents": {
+    "requirements": "Definitions: batch identifies extraction plate; status is case or control; negative controls must be documented separately."
+  },
+  "tables": {
+    "qc": "sample,batch,status\nA,P1,case\nB,P1,case\nC,P2,control\nD,P2,control\n"
+  },
+  "requirements": {},
+  "sources": [
+    "https://data.example.org/microbiome_confounding/study"
+  ],
+  "public_text": "The synthetic study does not document extraction blanks; batch correction cannot establish missing control evidence.",
+  "model": {
+    "plan": {
+      "steps": [
+        {
+          "id": "case_definitions",
+          "intent": "documents",
+          "query": "Definitions",
+          "documents": [
+            "requirements"
+          ]
+        },
+        {
+          "id": "public_evidence",
+          "intent": "discovery",
+          "query": "extraction blanks controls",
+          "documents": "case"
+        },
+        {
+          "id": "calculation",
+          "intent": "calculation",
+          "query": "Calculate microbiome_confounding",
+          "tables": [
+            "qc"
+          ],
+          "calculation": {
+            "operation": "cross_tab",
+            "group": "batch",
+            "label": "status"
+          },
+          "definition_quote": "Definitions: batch identifies extraction plate; status is case or control; negative controls must be documented separately."
+        }
+      ]
+    },
+    "synthesis": {
+      "claims": [
+        {
+          "statement": "The synthetic study does not document extraction blanks; batch correction cannot establish missing control evidence.",
+          "citations": [
+            {
+              "id": "E2",
+              "quote": "The synthetic study does not document extraction blanks; batch correction cannot establish missing control evidence."
+            }
+          ]
+        }
+      ],
+      "unresolved": [
+        "Negative-control availability remains unknown."
+      ]
+    }
+  },
+  "expected": {
+    "perfect_confounding": true,
+    "missing": 0
+  }
+}
