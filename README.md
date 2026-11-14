@@ -9,6 +9,7 @@ This repository currently contains design documents; the agent is not implemente
 - [Requirements specification](REQUIREMENTS_SPECIFICATION.md)
 - [Six technical-support scenarios](TECHNICAL_SUPPORT_SCENARIOS.md)
 - [Text-based agent decision tree](AGENT_DECISION_TREE.md)
+- [Temporary context and safe tool handoffs](CONTEXT_MANAGEMENT_PLAN.md)
 
 ## Agent decision flow
 
